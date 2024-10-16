@@ -89,7 +89,8 @@ class ProjectCreateApi(ApiAuthMixin, APIView):
 
         try:
             project_instance = project_create(
-                **input_serializer.validated_data, owner=request.user
+                **input_serializer.validated_data,
+                owner=request.user,
             )
 
             output_serializer = ProjectDetailApi.OutputSerializer(project_instance)
@@ -116,7 +117,8 @@ class ProjectUpdateApi(ApiAuthMixin, APIView):
         stared_date = serializers.DateTimeField(required=False)
         end_date = serializers.DateTimeField(required=False)
         priority = serializers.ChoiceField(
-            choices=Project.Priority.choices, required=False
+            choices=Project.Priority.choices,
+            required=False,
         )
 
     serializer_class = InputSerializer

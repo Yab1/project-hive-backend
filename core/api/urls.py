@@ -5,11 +5,13 @@ urlpatterns: list[URLResolver] = [
     path(
         "auth/",
         include(
-            ("core.authentication.urls", "authentication"), namespace="authentication"
+            ("core.authentication.urls", "authentication"),
+            namespace="authentication",
         ),
     ),
     path(
-        "projects/", include(("core.projects.urls", "projects"), namespace="projects")
+        "projects/",
+        include(("core.projects.urls", "projects"), namespace="projects"),
     ),
     path(
         "tasks/",

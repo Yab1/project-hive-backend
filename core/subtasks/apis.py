@@ -73,7 +73,8 @@ class SubTaskCreateApi(ApiAuthMixin, APIView):
         title = serializers.CharField(max_length=255)
         description = serializers.CharField()
         status = serializers.ChoiceField(
-            choices=SubTask.Status.choices, default=SubTask.Status.TO_DO
+            choices=SubTask.Status.choices,
+            default=SubTask.Status.TO_DO,
         )
         task = serializers.UUIDField()
         assignee = serializers.ListField(child=serializers.UUIDField())

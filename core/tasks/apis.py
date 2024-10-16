@@ -81,10 +81,12 @@ class TaskCreateApi(ApiAuthMixin, APIView):
         title = serializers.CharField(max_length=255)
         description = serializers.CharField()
         status = serializers.ChoiceField(
-            choices=Task.Status.choices, default=Task.Status.TO_DO
+            choices=Task.Status.choices,
+            default=Task.Status.TO_DO,
         )
         priority = serializers.ChoiceField(
-            choices=Task.Priority.choices, default=Task.Priority.LOW
+            choices=Task.Priority.choices,
+            default=Task.Priority.LOW,
         )
         due_date = serializers.DateField()
         started_date = serializers.DateField(required=False, allow_null=True)
@@ -123,7 +125,8 @@ class TaskUpdateApi(ApiAuthMixin, APIView):
         description = serializers.CharField(required=False)
         status = serializers.ChoiceField(choices=Task.Status.choices, required=False)
         priority = serializers.ChoiceField(
-            choices=Task.Priority.choices, required=False
+            choices=Task.Priority.choices,
+            required=False,
         )
         due_date = serializers.DateField(required=False)
         started_date = serializers.DateField(required=False, allow_null=True)

@@ -1,7 +1,8 @@
-from django.db import models
-from core.common.models import BaseModel
 from django.conf import settings
+from django.db import models
 from django.utils.translation import gettext_lazy as _
+
+from core.common.models import BaseModel
 
 
 class SubTask(BaseModel):
@@ -20,7 +21,8 @@ class SubTask(BaseModel):
     description = models.TextField()
     status = models.IntegerField(choices=Status.choices, default=Status.TO_DO)
     assignee = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name="subtasks_assigned"
+        settings.AUTH_USER_MODEL,
+        related_name="subtasks_assigned",
     )
 
     class Meta:
