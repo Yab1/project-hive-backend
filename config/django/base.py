@@ -17,6 +17,9 @@ ALLOWED_HOSTS = ["*"]
 LOCAL_APPS = [
     "core.api.apps.ApiConfig",
     "core.authentication.apps.AuthenticationConfig",
+    "core.projects.apps.ProjectsConfig",
+    "core.subtasks.apps.SubtasksConfig",
+    "core.tasks.apps.TasksConfig",
     "core.users.apps.UsersConfig",
 ]
 
@@ -149,7 +152,9 @@ AUTHENTICATION_BACKENDS = (
 )
 
 ANONYMOUS_USER_NAME = None
-GUARDIAN_GET_CONTENT_TYPE = "polymorphic.contrib.guardian.get_polymorphic_base_content_type"
+GUARDIAN_GET_CONTENT_TYPE = (
+    "polymorphic.contrib.guardian.get_polymorphic_base_content_type"
+)
 
 from config.settings.logging import *  # noqa
 from config.settings.cors import *  # noqa
