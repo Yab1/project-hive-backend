@@ -1,10 +1,8 @@
 from importlib import import_module
-from typing import Sequence, Type
 
 from django.conf import settings
 from django.contrib import auth
 from rest_framework.authentication import BaseAuthentication, SessionAuthentication
-from rest_framework.permissions import BasePermission, IsAuthenticated
 
 
 def get_auth_header(headers):
@@ -60,8 +58,9 @@ class CsrfExemptedSessionAuthentication(SessionAuthentication):
 
 
 class ApiAuthMixin:
-    authentication_classes: Sequence[Type[BaseAuthentication]] = [
-        CsrfExemptedSessionAuthentication,
-        SessionAsHeaderAuthentication,
-    ]
-    permission_classes: Sequence[Type[BasePermission]] = [IsAuthenticated]
+    pass
+    # authentication_classes: Sequence[Type[BaseAuthentication]] = [
+    #     CsrfExemptedSessionAuthentication,
+    #     SessionAsHeaderAuthentication,
+    # ]
+    # permission_classes: Sequence[Type[BasePermission]] = [IsAuthenticated]

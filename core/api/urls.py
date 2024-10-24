@@ -10,6 +10,10 @@ urlpatterns: list[URLResolver] = [
         ),
     ),
     path(
+        "members/",
+        include(("core.users.urls", "members"), namespace="members"),
+    ),
+    path(
         "projects/",
         include(("core.projects.urls", "projects"), namespace="projects"),
     ),
@@ -18,7 +22,11 @@ urlpatterns: list[URLResolver] = [
         include(("core.tasks.urls", "tasks"), namespace="tasks"),
     ),
     path(
-        "auth/",
+        "subtasks/",
         include(("core.subtasks.urls", "subtasks"), namespace="subtasks"),
+    ),
+    path(
+        "workspaces/",
+        include(("core.workspaces.urls", "workspaces"), namespace="workspaces"),
     ),
 ]
