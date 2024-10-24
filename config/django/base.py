@@ -21,6 +21,7 @@ LOCAL_APPS = [
     "core.subtasks.apps.SubtasksConfig",
     "core.tasks.apps.TasksConfig",
     "core.users.apps.UsersConfig",
+    "core.workspaces.apps.WorkspacesConfig",
 ]
 
 THIRD_PARTY_APPS: list[str] = [
