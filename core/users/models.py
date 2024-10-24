@@ -57,6 +57,13 @@ class Member(BaseUser, AbstractUser, PermissionsMixin):
         help_text=_("Enter the phone number of the employee."),
     )
 
+    avatar = models.ImageField(
+        upload_to="avatars/",
+        blank=True,
+        null=True,
+        help_text=_("Upload an avatar image for the employee."),
+    )
+
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)

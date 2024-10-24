@@ -31,6 +31,7 @@ class MemberAdmin(admin.ModelAdmin):
                     "first_name",
                     "last_name",
                     "phone_number",
+                    "avatar",
                 ),
             },
         ),
