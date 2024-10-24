@@ -1,3 +1,5 @@
+import logging
+
 from django.db import IntegrityError
 from rest_framework import serializers
 from rest_framework import status as http_status
@@ -6,10 +8,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.api.mixins import ApiAuthMixin
-from core.common.utils import get_object
+from core.common.utils import get_object, inline_serializer
+from core.users.models import Member
+from core.workspaces.models import Workspace
 
 from .models import Project
 from .services import project_create, project_update
+
+logger = logging.getLogger(__name__)
 
 
 class ProjectListApi(ApiAuthMixin, APIView):
@@ -17,11 +23,18 @@ class ProjectListApi(ApiAuthMixin, APIView):
         id = serializers.UUIDField()
         name = serializers.CharField()
         description = serializers.CharField()
-        states = serializers.ChoiceField(choices=Project.States.choices)
-        stared_date = serializers.DateTimeField()
-        end_date = serializers.DateTimeField()
+        emoji = serializers.URLField()
+        status = serializers.ChoiceField(choices=Project.Status.choices)
         priority = serializers.ChoiceField(choices=Project.Priority.choices)
-        owner = serializers.UUIDField()
+        started_date = serializers.DateTimeField()
+        end_date = serializers.DateTimeField()
+        owner = inline_serializer(
+            fields={
+                "id": serializers.UUIDField(),
+                "full_name": serializers.CharField(),
+                "avatar": serializers.ImageField(),
+            },
+        )
 
     serializer_class = OutputSerializer
 
@@ -47,19 +60,64 @@ class ProjectDetailApi(ApiAuthMixin, APIView):
         id = serializers.UUIDField()
         name = serializers.CharField()
         description = serializers.CharField()
-        states = serializers.ChoiceField(choices=Project.States.choices)
-        stared_date = serializers.DateTimeField()
+        status = serializers.CharField()
+        started_date = serializers.DateTimeField()
         end_date = serializers.DateTimeField()
-        priority = serializers.ChoiceField(choices=Project.Priority.choices)
-        owner = serializers.UUIDField()
+        priority = serializers.CharField()
+        owner = inline_serializer(
+            fields={
+                "id": serializers.UUIDField(),
+                "full_name": serializers.CharField(),
+                "avatar": serializers.ImageField(),
+            },
+        )
+        tasks = inline_serializer(
+            many=True,
+            fields={
+                "id": serializers.UUIDField(),
+                "title": serializers.CharField(),
+                "description": serializers.CharField(),
+                "status": serializers.CharField(),
+                "priority": serializers.CharField(),
+                "due_date": serializers.DateField(),
+                "started_date": serializers.DateField(),
+                "end_date": serializers.DateField(),
+                "project": serializers.UUIDField(),
+                "assignee": inline_serializer(
+                    many=True,
+                    fields={
+                        "id": serializers.UUIDField(),
+                        "full_name": serializers.CharField(),
+                        "avatar": serializers.ImageField(),
+                    },
+                ),
+                "subtasks": inline_serializer(
+                    many=True,
+                    fields={
+                        "id": serializers.UUIDField(),
+                        "title": serializers.CharField(),
+                        "description": serializers.CharField(),
+                        "status": serializers.CharField(),
+                        "assignee": inline_serializer(
+                            many=True,
+                            fields={
+                                "id": serializers.UUIDField(),
+                                "full_name": serializers.CharField(),
+                                "avatar": serializers.ImageField(),
+                            },
+                        ),
+                    },
+                ),
+            },
+        )
 
     serializer_class = OutputSerializer
 
     def get(self, request, project_id):
-        project_instance = get_object(Project, id=project_id)
+        project_instance = Project.objects.prefetch_related("tasks").get(id=project_id)
 
         try:
-            output_serializer = self.OutputSerializer(project_instance)
+            output_serializer = self.OutputSerializer(project_instance, context={"tasks": project_instance.tasks.all()})
 
             response_data = {"project": output_serializer.data}
 
@@ -75,27 +133,32 @@ class ProjectDetailApi(ApiAuthMixin, APIView):
 class ProjectCreateApi(ApiAuthMixin, APIView):
     class InputSerializer(serializers.Serializer):
         name = serializers.CharField(max_length=255)
-        description = serializers.CharField()
-        states = serializers.ChoiceField(choices=Project.States.choices)
-        stared_date = serializers.DateTimeField()
-        end_date = serializers.DateTimeField()
-        priority = serializers.ChoiceField(choices=Project.Priority.choices)
+        description = serializers.CharField(required=False, allow_blank=True)
+        status = serializers.ChoiceField(choices=Project.Status.choices, required=False)
+        priority = serializers.ChoiceField(choices=Project.Priority.choices, required=False)
+        time_frame = inline_serializer(
+            required=False,
+            fields={"from": serializers.CharField(required=False), "to": serializers.CharField(required=False)},
+        )
+        workspace_id = serializers.UUIDField()
 
     serializer_class = InputSerializer
 
     def post(self, request):
-        input_serializer = self.InputSerializer(data=request.data)
-        input_serializer.is_valid(raise_exception=True)
-
         try:
-            project_instance = project_create(
+            input_serializer = self.InputSerializer(data=request.data)
+            input_serializer.is_valid(raise_exception=True)
+
+            owner = Member.objects.get(email="david.wilson@example.com")
+            workspace = Workspace.objects.get(id=input_serializer.validated_data.pop("workspace_id"))
+
+            project_create(
                 **input_serializer.validated_data,
-                owner=request.user,
+                owner=owner,
+                workspace=workspace,
             )
 
-            output_serializer = ProjectDetailApi.OutputSerializer(project_instance)
-
-            response_data = {"project": output_serializer.data}
+            response_data = {"message": "Project created successfully!"}
 
             return Response(data=response_data, status=http_status.HTTP_201_CREATED)
 
@@ -106,6 +169,7 @@ class ProjectCreateApi(ApiAuthMixin, APIView):
             raise ValidationError(e)
 
         except Exception as e:
+            logger.error(f"An error occurred: {e}")
             raise ValueError(e)
 
 
@@ -113,8 +177,8 @@ class ProjectUpdateApi(ApiAuthMixin, APIView):
     class InputSerializer(serializers.Serializer):
         name = serializers.CharField(max_length=255, required=False)
         description = serializers.CharField(required=False)
-        states = serializers.ChoiceField(choices=Project.States.choices, required=False)
-        stared_date = serializers.DateTimeField(required=False)
+        status = serializers.ChoiceField(choices=Project.Status.choices, required=False)
+        started_date = serializers.DateTimeField(required=False)
         end_date = serializers.DateTimeField(required=False)
         priority = serializers.ChoiceField(
             choices=Project.Priority.choices,

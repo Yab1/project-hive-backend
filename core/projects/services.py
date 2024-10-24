@@ -1,4 +1,8 @@
+from datetime import datetime
+
 from django.db import transaction
+
+from core.workspaces.models import Workspace
 
 from .models import Project
 
@@ -7,21 +11,26 @@ from .models import Project
 def project_create(
     *,
     name: str,
-    description: str,
-    states: int,
-    stared_date: str,
-    end_date: str,
-    priority: int,
-    owner_id: str,
+    description: str = None,
+    status: str,
+    priority: str,
+    time_frame: dict = None,
+    workspace: Workspace,
+    owner: str,
 ):
+    stared_date_dt = datetime.fromisoformat(time_frame.get("from")) if time_frame.get("from") else None
+    end_date_dt = datetime.fromisoformat(time_frame.get("to")) if time_frame.get("to") else None
+
     return Project.objects.create(
         name=name,
         description=description,
-        states=states,
-        stared_date=stared_date,
-        end_date=end_date,
+        status=status,
+        started_date=stared_date_dt,
+        end_date=end_date_dt,
+        due_date=end_date_dt,
         priority=priority,
-        owner_id=owner_id,
+        owner=owner,
+        workspace=workspace,
     )
 
 
@@ -31,8 +40,8 @@ def project_update(
     project_instance: Project,
     name: str = None,
     description: str = None,
-    states: int = None,
-    stared_date: str = None,
+    status: int = None,
+    started_date: str = None,
     end_date: str = None,
     priority: int = None,
 ):
@@ -42,11 +51,11 @@ def project_update(
     if description is not None:
         project_instance.description = str(description)
 
-    if states is not None:
-        project_instance.states = int(states)
+    if status is not None:
+        project_instance.status = int(status)
 
-    if stared_date is not None:
-        project_instance.stared_date = stared_date
+    if started_date is not None:
+        project_instance.started_date = started_date
 
     if end_date is not None:
         project_instance.end_date = end_date

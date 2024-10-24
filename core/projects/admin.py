@@ -7,14 +7,18 @@ from .models import Project
 class ProjectAdmin(admin.ModelAdmin):
     list_display = [
         "name",
-        "states",
+        "status",
         "priority",
-        "stared_date",
+        "due_date",
+        "started_date",
         "end_date",
         "owner",
+        "workspace",
     ]
-    search_fields = ["name", "description"]
-    list_filter = ["states", "priority", "owner"]
+
+    search_fields = ["name", "description", "owner__username"]
+    list_filter = ["status", "priority", "owner", "workspace"]
+
     fieldsets = (
         (
             "Project Details",
@@ -22,22 +26,45 @@ class ProjectAdmin(admin.ModelAdmin):
                 "fields": (
                     "name",
                     "description",
-                    "states",
-                    "stared_date",
-                    "end_date",
+                    "status",
                     "priority",
-                    "owner",
                 ),
             },
         ),
         (
-            "Important Dates",
+            "Ownership",
             {
-                "fields": ("created_at", "updated_at"),
+                "fields": (
+                    "owner",
+                    "workspace",
+                ),
+            },
+        ),
+        (
+            "Timeline",
+            {
+                "fields": (
+                    "started_date",
+                    "due_date",
+                    "end_date",
+                ),
+            },
+        ),
+        (
+            "Metadata",
+            {
+                "fields": (
+                    "created_at",
+                    "updated_at",
+                ),
             },
         ),
     )
+
     readonly_fields = ["created_at", "updated_at"]
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related("owner")
+        return super().get_queryset(request).select_related("owner", "workspace")
+
+    class Meta:
+        ordering = ["started_date"]
